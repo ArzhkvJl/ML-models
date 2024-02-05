@@ -4,6 +4,16 @@ import math
 from sklearn.tree import DecisionTreeRegressor
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import mean_absolute_error
+from sklearn.ensemble import RandomForestRegressor
+
+
+def get_mae(max_leaf_nodes, train_X, val_X, train_y, val_y):
+    model = DecisionTreeRegressor(max_leaf_nodes=max_leaf_nodes, random_state=0)
+    model.fit(train_X, train_y)
+    preds_val = model.predict(val_X)
+    mae = mean_absolute_error(val_y, preds_val)
+    return mae
+
 
 # Path of the file to read
 iowa_file_path = 'train.csv'
@@ -52,3 +62,36 @@ val_predictions = iowa_model.predict(val_X)
 # check error
 val_mae = mean_absolute_error(val_y, val_predictions)
 print(val_mae)
+# a loop that tries the following values for max_leaf_nodes
+# from a set of possible values.
+candidate_max_leaf_nodes = [5, 25, 50, 100, 250, 500]
+errors = []
+for max_leaf_nodes in candidate_max_leaf_nodes:
+    my_mae = get_mae(max_leaf_nodes, train_X, val_X, train_y, val_y)
+    errors.append(my_mae)
+    print("Max leaf nodes: %d  \t\t Mean Absolute Error:  %d" % (max_leaf_nodes, my_mae))
+min_error = errors[0]
+# Store the best value of max_leaf_nodes
+best_tree_size = candidate_max_leaf_nodes[0]
+for i in range (len(candidate_max_leaf_nodes)):
+    if errors[i] < min_error:
+        min_error = errors[i]
+        best_tree_size = candidate_max_leaf_nodes[i]
+print(best_tree_size)
+# Fill in argument to make optimal size and uncomment
+final_model = DecisionTreeRegressor(max_leaf_nodes=best_tree_size, random_state=0)
+
+# fit the final model and uncomment the next two lines
+final_model.fit(X, y)
+
+# Define the model using random forest. Set random_state to 1
+rf_model = RandomForestRegressor(random_state=1)
+
+# fit your model
+rf_model.fit(train_X,train_y)
+
+# Calculate the mean absolute error of your Random Forest model on the validation data
+rf_val_mae = mean_absolute_error(val_y, rf_model.predict(val_X))
+
+print("Validation MAE for Random Forest Model: {}".format(rf_val_mae))
+
